@@ -4,10 +4,11 @@ const https = require('https');
 
 const DOMAIN = 'https://pageaura.xyz';
 const HOST = 'pageaura.xyz';
-const INDEXNOW_KEY = 'b989022cf4d04be6a08dca311ea2d020'; // 
+const INDEXNOW_KEY = 'indexnowkey12345'; // Apni indexnowapi.txt wali key yahan rakhein
 const KEY_FILENAME = 'indexnowapi.txt';
 
 const destFile = path.join(__dirname, 'destinations.txt');
+const dbFile = path.join(__dirname, 'database.json');
 const urlsOutputFile = path.join(__dirname, 'urls.txt');
 
 function generateRandomString(length = 9) {
@@ -19,6 +20,17 @@ function generateRandomString(length = 9) {
     return result;
 }
 
+// 1. Load existing database (slug -> targetUrl mapping)
+let db = {};
+if (fs.existsSync(dbFile)) {
+    try {
+        db = JSON.parse(fs.readFileSync(dbFile, 'utf8'));
+    } catch (e) {
+        db = {};
+    }
+}
+
+// 2. Read new destinations from destinations.txt
 let destinations = [];
 if (fs.existsSync(destFile)) {
     destinations = fs.readFileSync(destFile, 'utf8')
@@ -27,18 +39,36 @@ if (fs.existsSync(destFile)) {
         .filter(line => line.length > 0);
 }
 
-if (destinations.length === 0) {
-    console.log('No destination URLs found in destinations.txt');
-    return;
+// 3. Map existing targets to avoid duplicate slugs for same URLs
+let newlyAddedUrls = [];
+const targetToSlug = {};
+for (const [slug, targetUrl] of Object.entries(db)) {
+    targetToSlug[targetUrl] = slug;
 }
 
-let generatedUrls = [];
+destinations.forEach(targetUrl => {
+    let slug = targetToSlug[targetUrl];
+    if (!slug) {
+        // Generate a unique 9-character slug
+        do {
+            slug = generateRandomString(9);
+        } while (db[slug]);
+
+        db[slug] = targetUrl;
+        newlyAddedUrls.push(`${DOMAIN}/${slug}/`);
+    }
+});
+
+// Save updated database
+fs.writeFileSync(dbFile, JSON.stringify(db, null, 2), 'utf8');
+console.log(`Database updated. Total active redirects: ${Object.keys(db).length}`);
+
+// 4. Generate physical folders & HTML files for ALL redirects in DB
+let allGeneratedUrls = [];
 const now = new Date().toISOString();
 
-destinations.forEach(targetUrl => {
-    const randomSlug = generateRandomString(9);
-    const folderPath = path.join(__dirname, randomSlug);
-    
+Object.entries(db).forEach(([slug, targetUrl]) => {
+    const folderPath = path.join(__dirname, slug);
     fs.mkdirSync(folderPath, { recursive: true });
 
     const htmlContent = `<!DOCTYPE html>
@@ -57,20 +87,17 @@ destinations.forEach(targetUrl => {
 </html>`;
 
     fs.writeFileSync(path.join(folderPath, 'index.html'), htmlContent, 'utf8');
-
-    const fullPageUrl = `${DOMAIN}/${randomSlug}/`;
-    generatedUrls.push(fullPageUrl);
+    allGeneratedUrls.push(`${DOMAIN}/${slug}/`);
 });
 
-// 1. Save generated URLs to urls.txt
-fs.writeFileSync(urlsOutputFile, generatedUrls.join('\n'), 'utf8');
-console.log(`Saved ${generatedUrls.length} URLs to urls.txt`);
+// 5. Save all URLs to urls.txt
+fs.writeFileSync(urlsOutputFile, allGeneratedUrls.join('\n'), 'utf8');
 
-// 2. Generate sitemap.xml
+// 6. Generate sitemap.xml with ALL URLs (old + new)
 let sitemapXML = `<?xml version="1.0" encoding="UTF-8"?>\n`;
 sitemapXML += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
 
-generatedUrls.forEach(url => {
+allGeneratedUrls.forEach(url => {
     sitemapXML += `  <url>\n`;
     sitemapXML += `    <loc>${url}</loc>\n`;
     sitemapXML += `    <lastmod>${now}</lastmod>\n`;
@@ -78,44 +105,45 @@ generatedUrls.forEach(url => {
 });
 
 sitemapXML += `</urlset>`;
-
 fs.writeFileSync(path.join(__dirname, 'sitemap.xml'), sitemapXML, 'utf8');
-console.log(`Successfully generated sitemap.xml`);
 
-// 3. Generate robots.txt automatically
+// 7. Generate robots.txt
 const robotsTxtContent = `User-agent: *\nAllow: /\n\nSitemap: ${DOMAIN}/sitemap.xml\n`;
 fs.writeFileSync(path.join(__dirname, 'robots.txt'), robotsTxtContent, 'utf8');
-console.log(`Successfully generated robots.txt`);
 
-// 4. Send IndexNow API Request
-const payload = JSON.stringify({
-    host: HOST,
-    key: INDEXNOW_KEY,
-    keyLocation: `${DOMAIN}/${KEY_FILENAME}`,
-    urlList: generatedUrls
-});
-
-const options = {
-    hostname: 'api.indexnow.org',
-    port: 443,
-    path: '/indexnow',
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(payload)
-    }
-};
-
-const req = https.request(options, (res) => {
-    console.log(`IndexNow statusCode: ${res.statusCode}`);
-    res.on('data', (d) => {
-        process.stdout.write(d);
+// 8. Send IndexNow API Request for newly added URLs
+if (newlyAddedUrls.length > 0) {
+    const payload = JSON.stringify({
+        host: HOST,
+        key: INDEXNOW_KEY,
+        keyLocation: `${DOMAIN}/${KEY_FILENAME}`,
+        urlList: newlyAddedUrls
     });
-});
 
-req.on('error', (error) => {
-    console.error('IndexNow Error:', error);
-});
+    const options = {
+        hostname: 'api.indexnow.org',
+        port: 443,
+        path: '/indexnow',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(payload)
+        }
+    };
 
-req.write(payload);
-req.end();
+    const req = https.request(options, (res) => {
+        console.log(`IndexNow statusCode: ${res.statusCode}`);
+        res.on('data', (d) => {
+            process.stdout.write(d);
+        });
+    });
+
+    req.on('error', (error) => {
+        console.error('IndexNow Error:', error);
+    });
+
+    req.write(payload);
+    req.end();
+} else {
+    console.log('No new URLs to ping IndexNow.');
+}
