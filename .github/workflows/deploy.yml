@@ -2,8 +2,8 @@ name: Generate Redirects and Deploy
 
 on:
   schedule:
-    - cron: '0 * * * *' # Yeh har ghante (hourly) automatically run hoga
-  workflow_dispatch: # Isse aap button daba kar manually bhi run kar sakte hain
+    - cron: '0 * * * *' # Runs every hour
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -23,10 +23,18 @@ jobs:
       - name: Run Redirect & Sitemap Generator
         run: node generate-redirects.js
 
+      - name: Commit updated database to main
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          git status
+          git add database.json
+          git commit -m "Update redirect database [skip ci]" || echo "No changes to commit"
+          git push || echo "No changes to push"
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: .
-          # Yeh ensure karega ke CNAME file aur generated files gh-pages branch par push ho jayein
-          keep_files: false
+          keep_files: true # Keeps all past folders intact on gh-pages
