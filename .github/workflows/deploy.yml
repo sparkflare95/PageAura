@@ -1,0 +1,32 @@
+name: Generate Redirects and Deploy
+
+on:
+  schedule:
+    - cron: '0 * * * *' # Yeh har ghante (hourly) automatically run hoga
+  workflow_dispatch: # Isse aap button daba kar manually bhi run kar sakte hain
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run Redirect & Sitemap Generator
+        run: node generate-redirects.js
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
+          # Yeh ensure karega ke CNAME file aur generated files gh-pages branch par push ho jayein
+          keep_files: false
