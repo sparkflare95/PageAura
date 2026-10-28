@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://pageaura.xyz/sitemap.xml
