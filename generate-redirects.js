@@ -2,16 +2,13 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 
-const DOMAIN = 'https://sparkflare95.github.io/ZeroDowntime';
-const HOST = 'sparkflare95.github.io'; 
-const INDEXNOW_KEY = 'YOUR_INDEXNOW_KEY_HERE'; // Yahan apni IndexNow key likh dein (agar key nahi hai toh koi bhi random text daal dein)
+const DOMAIN = 'https://pageaura.xyz';
+const HOST = 'pageaura.xyz';
+const INDEXNOW_KEY = '2a6bdd132d7d4b15bb864c893cca90b1'; // 
+const KEY_FILENAME = 'indexnowapi.txt';
 
 const destFile = path.join(__dirname, 'destinations.txt');
-const publicDir = path.join(__dirname, 'public');
-
-if (!fs.existsSync(publicDir)) {
-    fs.mkdirSync(publicDir, { recursive: true });
-}
+const urlsOutputFile = path.join(__dirname, 'urls.txt');
 
 function generateRandomString(length = 9) {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -40,7 +37,7 @@ const now = new Date().toISOString();
 
 destinations.forEach(targetUrl => {
     const randomSlug = generateRandomString(9);
-    const folderPath = path.join(publicDir, randomSlug);
+    const folderPath = path.join(__dirname, randomSlug);
     
     fs.mkdirSync(folderPath, { recursive: true });
 
@@ -65,6 +62,11 @@ destinations.forEach(targetUrl => {
     generatedUrls.push(fullPageUrl);
 });
 
+// 1. Save generated URLs to urls.txt
+fs.writeFileSync(urlsOutputFile, generatedUrls.join('\n'), 'utf8');
+console.log(`Saved ${generatedUrls.length} URLs to urls.txt`);
+
+// 2. Generate sitemap.xml
 let sitemapXML = `<?xml version="1.0" encoding="UTF-8"?>\n`;
 sitemapXML += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
 
@@ -77,13 +79,19 @@ generatedUrls.forEach(url => {
 
 sitemapXML += `</urlset>`;
 
-fs.writeFileSync(path.join(publicDir, 'sitemap.xml'), sitemapXML, 'utf8');
-console.log(`Successfully generated ${generatedUrls.length} redirect pages and sitemap.xml`);
+fs.writeFileSync(path.join(__dirname, 'sitemap.xml'), sitemapXML, 'utf8');
+console.log(`Successfully generated sitemap.xml`);
 
+// 3. Generate robots.txt automatically
+const robotsTxtContent = `User-agent: *\nAllow: /\n\nSitemap: ${DOMAIN}/sitemap.xml\n`;
+fs.writeFileSync(path.join(__dirname, 'robots.txt'), robotsTxtContent, 'utf8');
+console.log(`Successfully generated robots.txt`);
+
+// 4. Send IndexNow API Request
 const payload = JSON.stringify({
     host: HOST,
     key: INDEXNOW_KEY,
-    keyLocation: `https://${HOST}/ZeroDowntime/${INDEXNOW_KEY}.txt`,
+    keyLocation: `${DOMAIN}/${KEY_FILENAME}`,
     urlList: generatedUrls
 });
 
