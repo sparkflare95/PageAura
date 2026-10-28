@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Aura - Next-Gen Digital Intelligence & Tech Platform</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        aura: {
+                            50: '#f0f4ff',
+                            100: '#e0e9ff',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                            cyan: '#06b6d4',
+                            purple: '#8b5cf6',
+                            glow: '#a855f7'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Font & FontAwesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .aura-gradient-text {
+            background: linear-gradient(135deg, #60a5fa 0%, #a855f7 50%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .aura-glow {
+            box-shadow: 0 0 40px -10px rgba(168, 85, 247, 0.25);
+        }
+        .aura-border-glow:hover {
+            box-shadow: 0 0 20px 2px rgba(59, 130, 246, 0.3);
+            border-color: rgba(96, 165, 250, 0.6);
+        }
+        .glass-panel {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(100, 116, 139, 0.5);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.8);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-aura-500 selection:text-white dark:bg-slate-950 dark:text-slate-100 bg-slate-50 text-slate-900 transition-colors duration-300">
+
+    <!-- Navigation Bar -->
+    <header class="sticky top-0 z-50 w-full border-b border-slate-800/80 bg-slate-950/80 dark:bg-slate-950/80 bg-white/80 border-slate-200 dark:border-slate-800 glass-panel">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <a href="#" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-aura-600 via-aura-purple to-aura-cyan p-0.5 shadow-lg group-hover:scale-105 transition-transform duration-300">
+                    <div class="w-full h-full bg-slate-950 dark:bg-slate-950 bg-white rounded-[10px] flex items-center justify-center">
+                        <i class="fa-solid font-bold text-aura-400 fa-bolt text-lg"></i>
+                    </div>
+                </div>
+                <span class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Page<span class="aura-gradient-text">Aura</span></span>
+            </a>
+
+            <!-- Desktop Menu -->
+            <nav class="hidden md:flex items-center space-x-8 text-sm font-medium">
+                <a href="#features" class="text-slate-600 dark:text-slate-300 hover:text-aura-500 dark:hover:text-aura-400 transition-colors">Platform</a>
+                <a href="#solutions" class="text-slate-600 dark:text-slate-300 hover:text-aura-500 dark:hover:text-aura-400 transition-colors">Solutions</a>
+                <a href="#insights" class="text-slate-600 dark:text-slate-300 hover:text-aura-500 dark:hover:text-aura-400 transition-colors">Insights</a>
+                <a href="#sitemap-section" class="text-slate-600 dark:text-slate-300 hover:text-aura-500 dark:hover:text-aura-400 transition-colors flex items-center gap-1.5">
+                    <i class="fa-solid fa-sitemap text-xs text-aura-500"></i>
+                    <span>Sitemap</span>
+                </a>
+            </nav>
+
+            <!-- Actions & Theme Toggle -->
+            <div class="flex items-center space-x-4">
+                <!-- Dark / Light Mode Toggle Button -->
+                <button id="themeToggle" class="p-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors" aria-label="Toggle Theme">
+                    <i id="themeIcon" class="fa-solid fa-moon text-lg"></i>
+                </button>
+
+                <a href="#get-started" class="hidden sm:inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-aura-600 to-aura-purple rounded-lg hover:opacity-90 transition-opacity shadow-md shadow-aura-600/20">
+                    Launch Console
+                </a>
+
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuBtn" class="md:hidden p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-800 rounded-lg">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Drawer -->
+        <div id="mobileMenu" class="hidden md:hidden border-b border-slate-800 bg-slate-900/95 px-4 py-4 space-y-3">
+            <a href="#features" class="block text-slate-300 hover:text-white py-1">Platform</a>
+            <a href="#solutions" class="block text-slate-300 hover:text-white py-1">Solutions</a>
+            <a href="#insights" class="block text-slate-300 hover:text-white py-1">Insights</a>
+            <a href="#sitemap-section" class="block text-slate-300 hover:text-white py-1">Sitemap.xml</a>
+            <a href="#get-started" class="block text-center mt-3 py-2 bg-aura-600 text-white rounded-lg font-medium">Launch Console</a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow">
+        <!-- Hero Section -->
+        <section class="relative overflow-hidden py-20 lg:py-32 bg-slate-950 dark:bg-slate-950 bg-slate-50">
+            <!-- Background Glow FX -->
+            <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-aura-600/30 to-aura-glow/20 blur-[120px] rounded-full pointer-events-none"></div>
+
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-aura-500/30 bg-aura-500/10 text-aura-400 text-xs sm:text-sm font-medium mb-6 animate-pulse">
+                    <span class="w-2 h-2 rounded-full bg-aura-cyan"></span>
+                    Page Aura Engine v3.4 Released
+                </div>
+
+                <h1 class="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-slate-900 dark:text-white max-w-4xl mx-auto leading-tight">
+                    Intelligent Web Performance with <span class="aura-gradient-text">Aura Perception</span>
+                </h1>
+
+                <p class="mt-6 text-lg sm:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto font-normal">
+                    Transform modern web architecture with real-time optimization, automated SEO telemetry, and high-throughput dynamic rendering.
+                </p>
+
+                <div class="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <a href="#features" class="w-full sm:w-auto px-8 py-3.5 text-base font-semibold text-white bg-aura-600 hover:bg-aura-500 rounded-xl transition-all duration-200 shadow-lg shadow-aura-600/30 flex items-center justify-center gap-2">
+                        Explore Platform <i class="fa-solid fa-arrow-right text-sm"></i>
+                    </a>
+                    <a href="#sitemap-section" class="w-full sm:w-auto px-8 py-3.5 text-base font-semibold text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800/60 rounded-xl transition-all duration-200 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-code text-xs text-aura-400"></i> View Sitemap Schema
+                    </a>
+                </div>
+
+                <!-- Interactive Tech Stats -->
+                <div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto pt-8 border-t border-slate-200 dark:border-slate-800/80">
+                    <div class="p-4 rounded-xl bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
+                        <div class="text-2xl sm:text-3xl font-bold aura-gradient-text">99.99%</div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Uptime Reliability</div>
+                    </div>
+                    <div class="p-4 rounded-xl bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
+                        <div class="text-2xl sm:text-3xl font-bold text-aura-cyan">&lt; 15ms</div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Global Edge Latency</div>
+                    </div>
+                    <div class="p-4 rounded-xl bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
+                        <div class="text-2xl sm:text-3xl font-bold text-aura-purple">12.4M</div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Daily Requests</div>
+                    </div>
+                    <div class="p-4 rounded-xl bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
+                        <div class="text-2xl sm:text-3xl font-bold text-emerald-400">100/100</div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Lighthouse Score</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tech Capabilities Grid -->
+        <section id="features" class="py-20 bg-slate-100 dark:bg-slate-900/50 border-y border-slate-200 dark:border-slate-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-2xl mx-auto mb-16">
+                    <h2 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Built for High-Scale Engineering</h2>
+                    <p class="mt-3 text-slate-600 dark:text-slate-400">Comprehensive toolsets engineered to supercharge performance, SEO crawling, and developer experience.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- Card 1 -->
+                    <div class="p-8 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 transition-all duration-300 aura-border-glow group">
+                        <div class="w-12 h-12 rounded-xl bg-aura-500/10 flex items-center justify-center text-aura-500 mb-6 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-network-wired text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-2">Edge Sitemap Protocol</h3>
+                        <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                            Dynamic sitemap generation updated on the edge instantly whenever new content endpoints are created.
+                        </p>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div class="p-8 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 transition-all duration-300 aura-border-glow group">
+                        <div class="w-12 h-12 rounded-xl bg-aura-purple/10 flex items-center justify-center text-aura-purple mb-6 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-microchip text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-2">Automated Crawl Indexing</h3>
+                        <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                            Direct ping integrations with search engines ensuring zero delay between publishing and indexation.
+                        </p>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div class="p-8 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 transition-all duration-300 aura-border-glow group">
+                        <div class="w-12 h-12 rounded-xl bg-aura-cyan/10 flex items-center justify-center text-aura-cyan mb-6 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-gauge-high text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-2">Real-time Telemetry</h3>
+                        <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                            Monitor search engine bot activity, response latency, and resource health with microsecond precision.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tech News & Insights Section -->
+        <section id="insights" class="py-20 bg-slate-950 dark:bg-slate-950 bg-slate-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
+                    <div>
+                        <span class="text-aura-500 font-semibold text-sm uppercase tracking-wider">Tech Dispatch</span>
+                        <h2 class="text-3xl font-bold text-slate-900 dark:text-white mt-1">Latest Articles & Indexing Updates</h2>
+                    </div>
+                    <a href="#" class="mt-4 md:mt-0 text-sm font-medium text-aura-400 hover:text-aura-300 flex items-center gap-1">
+                        View Developer Hub <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </a>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Post 1 -->
+                    <article class="rounded-xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col">
+                        <div class="p-6 flex-grow">
+                            <span class="text-xs font-mono px-2.5 py-1 rounded bg-aura-500/10 text-aura-400 border border-aura-500/20">Architecture</span>
+                            <h3 class="text-lg font-semibold text-slate-900 dark:text-white mt-4 hover:text-aura-400 transition-colors cursor-pointer">
+                                Optimizing Next.js Dynamic XML Sitemaps for Large Scale Sites
+                            </h3>
+                            <p class="text-sm text-slate-600 dark:text-slate-400 mt-2 line-clamp-2">
+                                Learn how Page Aura dynamically serves 100,000+ structured endpoints under 20ms using distributed workers.
+                            </p>
+                        </div>
+                        <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-800/60 text-xs text-slate-500 flex justify-between">
+                            <span>Oct 24, 2026</span>
+                            <span>5 min read</span>
+                        </div>
+                    </article>
+
+                    <!-- Post 2 -->
+                    <article class="rounded-xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col">
+                        <div class="p-6 flex-grow">
+                            <span class="text-xs font-mono px-2.5 py-1 rounded bg-aura-purple/10 text-aura-purple border border-aura-purple/20">Search & Crawling</span>
+                            <h3 class="text-lg font-semibold text-slate-900 dark:text-white mt-4 hover:text-aura-400 transition-colors cursor-pointer">
+                                Googlebot Protocol Changes: What Developers Need to Know
+                            </h3>
+                            <p class="text-sm text-slate-600 dark:text-slate-400 mt-2 line-clamp-2">
+                                An in-depth breakdown of search crawler directives, changefreq parameters, and priority tag deprecations.
+                            </p>
+                        </div>
+                        <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-800/60 text-xs text-slate-500 flex justify-between">
+                            <span>Oct 20, 2026</span>
+                            <span>8 min read</span>
+                        </div>
+                    </article>
+
+                    <!-- Post 3 -->
+                    <article class="rounded-xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col">
+                        <div class="p-6 flex-grow">
+                            <span class="text-xs font-mono px-2.5 py-1 rounded bg-aura-cyan/10 text-aura-cyan border border-aura-cyan/20">Performance</span>
+                            <h3 class="text-lg font-semibold text-slate-900 dark:text-white mt-4 hover:text-aura-400 transition-colors cursor-pointer">
+                                Core Web Vitals 2026 Benchmark Report
+                            </h3>
+                            <p class="text-sm text-slate-600 dark:text-slate-400 mt-2 line-clamp-2">
+                                Analyzing interaction to next paint (INP) across 500 enterprise web applications built with Page Aura.
+                            </p>
+                        </div>
+                        <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-800/60 text-xs text-slate-500 flex justify-between">
+                            <span>Oct 15, 2026</span>
+                            <span>4 min read</span>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer with Interactive XML Sitemap -->
+    <footer id="sitemap-section" class="bg-slate-900 dark:bg-slate-950 border-t border-slate-800 text-slate-400 pt-16 pb-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            <!-- Footer Main Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-10 pb-12 border-b border-slate-800">
+                <!-- Column 1: Brand Info -->
+                <div class="md:col-span-2 space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-aura-600 to-aura-cyan p-0.5">
+                            <div class="w-full h-full bg-slate-950 rounded-[6px] flex items-center justify-center">
+                                <i class="fa-solid fa-bolt text-aura-400 text-sm"></i>
+                            </div>
+                        </div>
+                        <span class="text-lg font-bold text-white">Page Aura</span>
+                    </div>
+                    <p class="text-sm text-slate-400 max-w-sm">
+                        High-performance digital platform powering real-time web infrastructure, SEO automation, and edge delivery.
+                    </p>
+                    <div class="flex space-x-4 pt-2 text-slate-400">
+                        <a href="#" class="hover:text-aura-400 transition-colors"><i class="fa-brands fa-github text-lg"></i></a>
+                        <a href="#" class="hover:text-aura-400 transition-colors"><i class="fa-brands fa-x-twitter text-lg"></i></a>
+                        <a href="#" class="hover:text-aura-400 transition-colors"><i class="fa-brands fa-discord text-lg"></i></a>
+                    </div>
+                </div>
+
+                <!-- Navigation Columns -->
+                <div>
+                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Platform</h4>
+                    <ul class="space-y-2.5 text-sm">
+                        <li><a href="#" class="hover:text-white transition-colors">Core Engine</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Edge Network</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Telemetry</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Integrations</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Resources</h4>
+                    <ul class="space-y-2.5 text-sm">
+                        <li><a href="#" class="hover:text-white transition-colors">Documentation</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">API Reference</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">System Status</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Changelog</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Legal & XML</h4>
+                    <ul class="space-y-2.5 text-sm">
+                        <li><a href="#" class="hover:text-white transition-colors">Privacy Policy</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Terms of Service</a></li>
+                        <li><a href="javascript:void(0)" onclick="toggleSitemapViewer()" class="text-aura-400 hover:underline flex items-center gap-1.5 font-mono text-xs">
+                            <i class="fa-solid fa-code"></i> sitemap.xml
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Embedded Sitemap XML Inspector / Viewer -->
+            <div class="mt-10 rounded-xl bg-slate-950 border border-slate-800/80 overflow-hidden shadow-2xl">
+                <!-- Sitemap Bar Header -->
+                <div class="px-5 py-3.5 bg-slate-900/80 border-b border-slate-800 flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-file-code text-aura-500"></i>
+                        <span class="text-xs font-mono text-slate-200 font-semibold">https://pageaura.tech/sitemap.xml</span>
+                        <span class="px-2 py-0.5 text-[10px] font-mono rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">VALID XML</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-3">
+                        <button onclick="copySitemapXML()" class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono transition-colors flex items-center gap-1.5">
+                            <i class="fa-regular fa-copy"></i>
+                            <span id="copyText">Copy XML</span>
+                        </button>
+                        <button onclick="toggleSitemapViewer()" class="px-3 py-1 rounded bg-aura-600/20 text-aura-400 hover:bg-aura-600/30 text-xs font-mono transition-colors flex items-center gap-1">
+                            <span id="toggleText">Hide Markup</span>
+                            <i id="toggleIcon" class="fa-solid fa-chevron-up"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Sitemap Visual & XML Content Container -->
+                <div id="sitemapContainer" class="p-6 space-y-6 transition-all duration-300">
+                    
+                    <!-- Human-friendly Tree View -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-mono">
+                        <div class="p-3 rounded border border-slate-800 bg-slate-900/40">
+                            <div class="text-aura-400 font-bold mb-2 flex items-center gap-1.5">
+                                <i class="fa-solid fa-folder text-slate-500"></i> Main Routes
+                            </div>
+                            <ul class="space-y-1 text-slate-400">
+                                <li><a href="#" class="hover:text-aura-300">/index.html</a> <span class="text-slate-600">(p: 1.0)</span></li>
+                                <li><a href="#features" class="hover:text-aura-300">/platform</a> <span class="text-slate-600">(p: 0.9)</span></li>
+                                <li><a href="#solutions" class="hover:text-aura-300">/solutions</a> <span class="text-slate-600">(p: 0.8)</span></li>
+                            </ul>
+                        </div>
+
+                        <div class="p-3 rounded border border-slate-800 bg-slate-900/40">
+                            <div class="text-aura-purple font-bold mb-2 flex items-center gap-1.5">
+                                <i class="fa-solid fa-folder text-slate-500"></i> Resources
+                            </div>
+                            <ul class="space-y-1 text-slate-400">
+                                <li><a href="#insights" class="hover:text-aura-purple">/insights</a> <span class="text-slate-600">(p: 0.8)</span></li>
+                                <li><a href="#" class="hover:text-aura-purple">/docs/api</a> <span class="text-slate-600">(p: 0.7)</span></li>
+                                <li><a href="#" class="hover:text-aura-purple">/changelog</a> <span class="text-slate-600">(p: 0.6)</span></li>
+                            </ul>
+                        </div>
+
+                        <div class="p-3 rounded border border-slate-800 bg-slate-900/40">
+                            <div class="text-aura-cyan font-bold mb-2 flex items-center gap-1.5">
+                                <i class="fa-solid fa-folder text-slate-500"></i> Legal & Data
+                            </div>
+                            <ul class="space-y-1 text-slate-400">
+                                <li><a href="#" class="hover:text-aura-cyan">/privacy</a> <span class="text-slate-600">(p: 0.3)</span></li>
+                                <li><a href="#" class="hover:text-aura-cyan">/terms</a> <span class="text-slate-600">(p: 0.3)</span></li>
+                                <li><a href="#" class="hover:text-aura-cyan">/security</a> <span class="text-slate-600">(p: 0.5)</span></li>
+                            </ul>
+                        </div>
+
+                        <div class="p-3 rounded border border-slate-800 bg-slate-900/40">
+                            <div class="text-emerald-400 font-bold mb-2 flex items-center gap-1.5">
+                                <i class="fa-solid fa-gear text-slate-500"></i> Metadata
+                            </div>
+                            <div class="text-slate-400 space-y-1">
+                                <div>Format: <span class="text-slate-200">XML / 0.9</span></div>
+                                <div>Encoding: <span class="text-slate-200">UTF-8</span></div>
+                                <div>Endpoints: <span class="text-slate-200">9 Active</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Raw XML View -->
+                    <div class="relative">
+                        <div class="absolute top-2 right-3 text-[10px] font-mono text-slate-600 uppercase">sitemap.xml raw</div>
+                        <pre class="p-4 rounded bg-slate-900 border border-slate-800/80 text-xs font-mono text-emerald-400/90 overflow-x-auto leading-relaxed max-h-60" id="xmlBlock"><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"&gt;
+  &lt;url&gt;
+    &lt;loc&gt;https://pageaura.tech/&lt;/loc&gt;
+    &lt;lastmod&gt;2026-10-28&lt;/lastmod&gt;
+    &lt;changefreq&gt;daily&lt;/changefreq&gt;
+    &lt;priority&gt;1.0&lt;/priority&gt;
+  &lt;/url&gt;
+  &lt;url&gt;
+    &lt;loc&gt;https://pageaura.tech/platform&lt;/loc&gt;
+    &lt;lastmod&gt;2026-10-25&lt;/lastmod&gt;
+    &lt;changefreq&gt;weekly&lt;/changefreq&gt;
+    &lt;priority&gt;0.9&lt;/priority&gt;
+  &lt;/url&gt;
+  &lt;url&gt;
+    &lt;loc&gt;https://pageaura.tech/insights&lt;/loc&gt;
+    &lt;lastmod&gt;2026-10-28&lt;/lastmod&gt;
+    &lt;changefreq&gt;daily&lt;/changefreq&gt;
+    &lt;priority&gt;0.8&lt;/priority&gt;
+  &lt;/url&gt;
+  &lt;url&gt;
+    &lt;loc&gt;https://pageaura.tech/docs/api&lt;/loc&gt;
+    &lt;lastmod&gt;2026-10-20&lt;/lastmod&gt;
+    &lt;changefreq&gt;monthly&lt;/changefreq&gt;
+    &lt;priority&gt;0.7&lt;/priority&gt;
+  &lt;/url&gt;
+&lt;/urlset&gt;</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Copyright -->
+            <div class="mt-12 pt-6 border-t border-slate-800/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+                <p>&copy; 2026 Page Aura Inc. All rights reserved.</p>
+                <p class="font-mono">Engineered for Next-Gen Web Optimization</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Interactive Script Logic -->
+    <script>
+        // Toggle Dark / Light Theme
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const html = document.documentElement;
+
+        themeToggleBtn.addEventListener('click', () => {
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+            } else {
+                html.classList.add('dark');
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+            }
+        });
+
+        // Mobile Menu Toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Sitemap Inspector Toggle Functionality
+        function toggleSitemapViewer() {
+            const container = document.getElementById('sitemapContainer');
+            const toggleText = document.getElementById('toggleText');
+            const toggleIcon = document.getElementById('toggleIcon');
+
+            if (container.classList.contains('hidden')) {
+                container.classList.remove('hidden');
+                toggleText.innerText = 'Hide Markup';
+                toggleIcon.className = 'fa-solid fa-chevron-up';
+            } else {
+                container.classList.add('hidden');
+                toggleText.innerText = 'Expand Markup';
+                toggleIcon.className = 'fa-solid fa-chevron-down';
+            }
+        }
+
+        // Copy Sitemap XML to Clipboard
+        function copySitemapXML() {
+            const xmlText = document.getElementById('xmlBlock').innerText;
+            
+            // Execute fallback copy method
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = xmlText;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyTextSpan = document.getElementById('copyText');
+            copyTextSpan.innerText = 'Copied!';
+            
+            setTimeout(() => {
+                copyTextSpan.innerText = 'Copy XML';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
