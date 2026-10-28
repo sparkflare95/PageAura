@@ -4,7 +4,7 @@ const https = require('https');
 
 const DOMAIN = 'https://pageaura.xyz';
 const HOST = 'pageaura.xyz';
-const INDEXNOW_KEY = '2a6bdd132d7d4b15bb864c893cca90b1'; // 
+const INDEXNOW_KEY = 'b989022cf4d04be6a08dca311ea2d020'; // 
 const KEY_FILENAME = 'indexnowapi.txt';
 
 const destFile = path.join(__dirname, 'destinations.txt');
