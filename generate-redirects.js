@@ -1,149 +1,125 @@
 const fs = require('fs');
 const path = require('path');
-const https = require('https');
 
-const DOMAIN = 'https://pageaura.xyz';
-const HOST = 'pageaura.xyz';
-const INDEXNOW_KEY = 'indexnowkey12345'; // Apni indexnowapi.txt wali key yahan rakhein
-const KEY_FILENAME = 'indexnowapi.txt';
+const DOMAIN = 'https://sparkflare95.pages.dev'; // Apni main domain/repo ke mutabiq adjust kar sakte hain
+const KEY = process.env.INDEXNOW_KEY || 'YOUR_INDEXNOW_KEY'; // Apni key yahan ya env se set karein
 
-const destFile = path.join(__dirname, 'destinations.txt');
-const dbFile = path.join(__dirname, 'database.json');
-const urlsOutputFile = path.join(__dirname, 'urls.txt');
+const ROOT = __dirname;
+const PUBLIC_DIR = path.join(ROOT, 'public');
+const URLS_FILE = path.join(ROOT, 'urls.txt');
+const REDIRECTS_FILE = path.join(PUBLIC_DIR, '_redirects');
+const SITEMAP_FILE = path.join(PUBLIC_DIR, 'sitemap.xml');
 
-function generateRandomString(length = 9) {
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
+if (!fs.existsSync(URLS_FILE)) {
+  throw new Error('urls.txt is missing. Deployment stopped.');
 }
 
-// 1. Load existing database (slug -> targetUrl mapping)
-let db = {};
-if (fs.existsSync(dbFile)) {
-    try {
-        db = JSON.parse(fs.readFileSync(dbFile, 'utf8'));
-    } catch (e) {
-        db = {};
-    }
+if (!fs.existsSync(REDIRECTS_FILE)) {
+  throw new Error('public/_redirects is missing. Deployment stopped.');
 }
 
-// 2. Read new destinations from destinations.txt
-let destinations = [];
-if (fs.existsSync(destFile)) {
-    destinations = fs.readFileSync(destFile, 'utf8')
-        .split('\n')
-        .map(line => line.trim())
-        .filter(line => line.length > 0);
+const redirectRules = fs.readFileSync(REDIRECTS_FILE, 'utf8')
+  .split(/\r?\n/)
+  .filter(line => line.trim() && !line.trim().startsWith('#'));
+
+if (redirectRules.length > 2000) {
+  throw new Error(`Redirect validation failed: ${redirectRules.length} rules.`);
 }
 
-// 3. Map existing targets to avoid duplicate slugs for same URLs
-let newlyAddedUrls = [];
-const targetToSlug = {};
-for (const [slug, targetUrl] of Object.entries(db)) {
-    targetToSlug[targetUrl] = slug;
+const rawUrls = fs.readFileSync(URLS_FILE, 'utf8')
+  .split(/\r?\n/)
+  .map(line => line.trim())
+  .filter(Boolean);
+
+const urls = [];
+
+for (const value of rawUrls) {
+  let url;
+
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error(`Invalid URL in urls.txt: ${value}`);
+  }
+
+  if (
+    !['http:', 'https:'].includes(url.protocol) ||
+    url.username ||
+    url.password
+  ) {
+    throw new Error(`Unexpected URL in urls.txt: ${value}`);
+  }
+
+  url.protocol = 'https:';
+  url.pathname = '/' + url.pathname.split('/').filter(Boolean).join('/');
+
+  // Title generation from slug/path for Google News
+  const pathSegments = url.pathname.split('/').filter(Boolean);
+  let title = 'Latest Updates & Articles';
+  if (pathSegments.length > 0) {
+    const lastSegment = pathSegments[pathSegments.length - 1];
+    title = lastSegment
+      .replace(/[-_]/g, ' ')
+      .replace(/\.\w+$/, '')
+      .replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  urls.push({
+    href: url.href,
+    title: title
+  });
 }
 
-destinations.forEach(targetUrl => {
-    let slug = targetToSlug[targetUrl];
-    if (!slug) {
-        // Generate a unique 9-character slug
-        do {
-            slug = generateRandomString(9);
-        } while (db[slug]);
-
-        db[slug] = targetUrl;
-        newlyAddedUrls.push(`${DOMAIN}/${slug}/`);
-    }
-});
-
-// Save updated database
-fs.writeFileSync(dbFile, JSON.stringify(db, null, 2), 'utf8');
-console.log(`Database updated. Total active redirects: ${Object.keys(db).length}`);
-
-// 4. Generate physical folders & HTML files for ALL redirects in DB
-let allGeneratedUrls = [];
-const now = new Date().toISOString();
-
-Object.entries(db).forEach(([slug, targetUrl]) => {
-    const folderPath = path.join(__dirname, slug);
-    fs.mkdirSync(folderPath, { recursive: true });
-
-    const htmlContent = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=${targetUrl}">
-    <title>Redirecting...</title>
-    <script>
-        window.location.href = "${targetUrl}";
-    </script>
-</head>
-<body>
-    <p>Redirecting to <a href="${targetUrl}">${targetUrl}</a>...</p>
-</body>
-</html>`;
-
-    fs.writeFileSync(path.join(folderPath, 'index.html'), htmlContent, 'utf8');
-    allGeneratedUrls.push(`${DOMAIN}/${slug}/`);
-});
-
-// 5. Save all URLs to urls.txt
-fs.writeFileSync(urlsOutputFile, allGeneratedUrls.join('\n'), 'utf8');
-
-// 6. Generate sitemap.xml with ALL URLs (old + new)
-let sitemapXML = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-sitemapXML += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
-
-allGeneratedUrls.forEach(url => {
-    sitemapXML += `  <url>\n`;
-    sitemapXML += `    <loc>${url}</loc>\n`;
-    sitemapXML += `    <lastmod>${now}</lastmod>\n`;
-    sitemapXML += `  </url>\n`;
-});
-
-sitemapXML += `</urlset>`;
-fs.writeFileSync(path.join(__dirname, 'sitemap.xml'), sitemapXML, 'utf8');
-
-// 7. Generate robots.txt
-const robotsTxtContent = `User-agent: *\nAllow: /\n\nSitemap: ${DOMAIN}/sitemap.xml\n`;
-fs.writeFileSync(path.join(__dirname, 'robots.txt'), robotsTxtContent, 'utf8');
-
-// 8. Send IndexNow API Request for newly added URLs
-if (newlyAddedUrls.length > 0) {
-    const payload = JSON.stringify({
-        host: HOST,
-        key: INDEXNOW_KEY,
-        keyLocation: `${DOMAIN}/${KEY_FILENAME}`,
-        urlList: newlyAddedUrls
-    });
-
-    const options = {
-        hostname: 'api.indexnow.org',
-        port: 443,
-        path: '/indexnow',
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Content-Length': Buffer.byteLength(payload)
-        }
-    };
-
-    const req = https.request(options, (res) => {
-        console.log(`IndexNow statusCode: ${res.statusCode}`);
-        res.on('data', (d) => {
-            process.stdout.write(d);
-        });
-    });
-
-    req.on('error', (error) => {
-        console.error('IndexNow Error:', error);
-    });
-
-    req.write(payload);
-    req.end();
-} else {
-    console.log('No new URLs to ping IndexNow.');
+if (urls.length === 0) {
+  throw new Error('No valid URLs found. Deployment stopped.');
 }
+
+const lastmod = new Date().toISOString();
+
+function escapeXml(value) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+// XML Structure with Google News Namespace
+let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n';
+xml += '        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">\n';
+
+for (const item of urls) {
+  xml += '  <url>\n';
+  xml += `    <loc>${escapeXml(item.href)}</loc>\n`;
+  xml += `    <lastmod>${lastmod}</lastmod>\n`;
+  xml += '    <changefreq>hourly</changefreq>\n';
+  xml += '    <news:news>\n';
+  xml += '      <news:publication>\n';
+  xml += `        <news:name>PageAura</news:name>\n`;
+  xml += `        <news:language>en</news:language>\n`;
+  xml += '      </news:publication>\n';
+  xml += `      <news:publication_date>${lastmod}</news:publication_date>\n`;
+  xml += `      <news:title>${escapeXml(item.title)}</news:title>\n`;
+  xml += '    </news:news>\n';
+  xml += '  </url>\n';
+}
+
+xml += '</urlset>\n';
+
+fs.mkdirSync(PUBLIC_DIR, { recursive: true });
+fs.writeFileSync(SITEMAP_FILE, xml, 'utf8');
+
+if (!fs.existsSync(REDIRECTS_FILE)) {
+  throw new Error('_redirects is missing after sitemap generation.');
+}
+
+if (!fs.existsSync(SITEMAP_FILE)) {
+  throw new Error('Sitemap file generation failed.');
+}
+
+console.log(`Sitemap URLs processed: ${urls.length}`);
+console.log(`lastmod: ${lastmod}`);
+console.log('changefreq: hourly with Google News tags injected.');
+console.log('Build validation passed.');
