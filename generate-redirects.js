@@ -6,6 +6,7 @@ const DOMAIN = 'https://pageaura.xyz';
 const HOST = 'pageaura.xyz';
 const INDEXNOW_KEY = 'indexnowkey12345'; // Apni indexnowapi.txt wali key yahan rakhein
 const KEY_FILENAME = 'indexnowapi.txt';
+const PUBLICATION_NAME = 'PageAura'; // Aap yahan apni site ka brand name likh sakte hain
 
 const destFile = path.join(__dirname, 'destinations.txt');
 const dbFile = path.join(__dirname, 'database.json');
@@ -20,11 +21,42 @@ function generateRandomString(length = 9) {
     return result;
 }
 
-// 1. Load existing database (slug -> targetUrl mapping)
+// Helper to generate a clean readable news title from target URL
+function generateNewsTitle(url) {
+    try {
+        const parsed = new URL(url);
+        let segments = parsed.pathname.split('/').filter(Boolean);
+        if (segments.length > 0) {
+            let lastSegment = segments[segments.length - 1];
+            // Clean up hyphens and underscores into readable words
+            let clean = lastSegment.replace(/[-_]/g, ' ').replace(/\.[^/.]+$/, '');
+            if (clean.length > 3) {
+                return clean.charAt(0).toUpperCase() + clean.slice(1);
+            }
+        }
+        return `Updates from ${parsed.hostname}`;
+    } catch (e) {
+        return 'Latest Update and Information';
+    }
+}
+
+// 1. Load existing database and handle format migration if needed
 let db = {};
 if (fs.existsSync(dbFile)) {
     try {
-        db = JSON.parse(fs.readFileSync(dbFile, 'utf8'));
+        const rawDb = JSON.parse(fs.readFileSync(dbFile, 'utf8'));
+        // Migrate old string format to object format { targetUrl, pubDate, title }
+        for (const [slug, val] of Object.entries(rawDb)) {
+            if (typeof val === 'string') {
+                db[slug] = {
+                    targetUrl: val,
+                    pubDate: new Date().toISOString(),
+                    title: generateNewsTitle(val)
+                };
+            } else {
+                db[slug] = val;
+            }
+        }
     } catch (e) {
         db = {};
     }
@@ -39,12 +71,14 @@ if (fs.existsSync(destFile)) {
         .filter(line => line.length > 0);
 }
 
-// 3. Map existing targets to avoid duplicate slugs for same URLs
+// 3. Map existing targets to prevent duplicate slugs
 let newlyAddedUrls = [];
 const targetToSlug = {};
-for (const [slug, targetUrl] of Object.entries(db)) {
-    targetToSlug[targetUrl] = slug;
+for (const [slug, data] of Object.entries(db)) {
+    targetToSlug[data.targetUrl] = slug;
 }
+
+const nowISO = new Date().toISOString();
 
 destinations.forEach(targetUrl => {
     let slug = targetToSlug[targetUrl];
@@ -54,7 +88,11 @@ destinations.forEach(targetUrl => {
             slug = generateRandomString(9);
         } while (db[slug]);
 
-        db[slug] = targetUrl;
+        db[slug] = {
+            targetUrl: targetUrl,
+            pubDate: nowISO,
+            title: generateNewsTitle(targetUrl)
+        };
         newlyAddedUrls.push(`${DOMAIN}/${slug}/`);
     }
 });
@@ -65,9 +103,8 @@ console.log(`Database updated. Total active redirects: ${Object.keys(db).length}
 
 // 4. Generate physical folders & HTML files for ALL redirects in DB
 let allGeneratedUrls = [];
-const now = new Date().toISOString();
 
-Object.entries(db).forEach(([slug, targetUrl]) => {
+Object.entries(db).forEach(([slug, data]) => {
     const folderPath = path.join(__dirname, slug);
     fs.mkdirSync(folderPath, { recursive: true });
 
@@ -75,14 +112,14 @@ Object.entries(db).forEach(([slug, targetUrl]) => {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=${targetUrl}">
-    <title>Redirecting...</title>
+    <meta http-equiv="refresh" content="0; url=${data.targetUrl}">
+    <title>${data.title}</title>
     <script>
-        window.location.href = "${targetUrl}";
+        window.location.href = "${data.targetUrl}";
     </script>
 </head>
 <body>
-    <p>Redirecting to <a href="${targetUrl}">${targetUrl}</a>...</p>
+    <p>Redirecting to <a href="${data.targetUrl}">${data.targetUrl}</a>...</p>
 </body>
 </html>`;
 
@@ -93,19 +130,30 @@ Object.entries(db).forEach(([slug, targetUrl]) => {
 // 5. Save all URLs to urls.txt
 fs.writeFileSync(urlsOutputFile, allGeneratedUrls.join('\n'), 'utf8');
 
-// 6. Generate sitemap.xml with ALL URLs (old + new)
+// 6. Generate Google News Sitemap XML with all required tags
 let sitemapXML = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-sitemapXML += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+sitemapXML += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n`;
+sitemapXML += `        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">\n`;
 
-allGeneratedUrls.forEach(url => {
+Object.entries(db).forEach(([slug, data]) => {
+    const pageUrl = `${DOMAIN}/${slug}/`;
     sitemapXML += `  <url>\n`;
-    sitemapXML += `    <loc>${url}</loc>\n`;
-    sitemapXML += `    <lastmod>${now}</lastmod>\n`;
+    sitemapXML += `    <loc>${pageUrl}</loc>\n`;
+    sitemapXML += `    <news:news>\n`;
+    sitemapXML += `      <news:publication>\n`;
+    sitemapXML += `        <news:name>${PUBLICATION_NAME}</news:name>\n`;
+    sitemapXML += `        <news:language>en</news:language>\n`;
+    sitemapXML += `      </news:publication>\n`;
+    sitemapXML += `      <news:publication_date>${data.pubDate}</news:publication_date>\n`;
+    sitemapXML += `      <news:title><![CDATA[${data.title}]]></news:title>\n`;
+    sitemapXML += `    </news:news>\n`;
     sitemapXML += `  </url>\n`;
 });
 
 sitemapXML += `</urlset>`;
+
 fs.writeFileSync(path.join(__dirname, 'sitemap.xml'), sitemapXML, 'utf8');
+console.log(`Successfully generated Google News sitemap.xml`);
 
 // 7. Generate robots.txt
 const robotsTxtContent = `User-agent: *\nAllow: /\n\nSitemap: ${DOMAIN}/sitemap.xml\n`;
