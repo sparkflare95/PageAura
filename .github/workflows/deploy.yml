@@ -1,56 +1,40 @@
-name: Hourly Site Re-indexing and Deploy
+name: Generate Redirects and Deploy
 
 on:
   schedule:
-    - cron: '0 * * * *'
-  workflow_dispatch:
+    - cron: '0 * * * *' # Har ghante (hourly) run hoga
+  workflow_dispatch: # Manual run button ke liye
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Verify Required Files
-        shell: bash
+      - name: Run Redirect & Sitemap Generator
+        run: node generate-redirects.js
+
+      - name: Commit updated database to main
         run: |
-          test -f urls.txt || {
-            echo "ERROR: urls.txt is missing."
-            exit 1
-          }
-          test -f public/_redirects || {
-            echo "ERROR: public/_redirects is missing."
-            exit 1
-          }
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          git status
+          git add database.json
+          git commit -m "Update redirect database with news sitemap data [skip ci]" || echo "No changes to commit"
+          git push || echo "No changes to push"
 
-      - name: Generate and Validate Sitemap
-        run: node build-sitemap.js
-
-      - name: Verify Deployment Files
-        shell: bash
-        run: |
-          test -s public/sitemap.xml
-          test -s public/_redirects
-          grep -q '<news:news>' public/sitemap.xml
-          grep -q '<changefreq>hourly</changefreq>' public/sitemap.xml
-          echo "Google News sitemap validation passed."
-
-      - name: Deploy to Cloudflare Pages
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: npx wrangler pages deploy public --project-name=PageAura --commit-dirty=true
-
-      - name: Run IndexNow Ping
-        if: success()
-        run: node ping-indexnow.js
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
+          keep_files: true # Purane folders aur files ko gh-pages par delete hone se bachata hai
